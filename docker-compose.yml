@@ -1,0 +1,68 @@
+﻿services:
+  db:
+    image: postgres:16-alpine
+    container_name: estoque_db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: estoque
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./api/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - estoque_net
+
+  api:
+    build: ./api
+    container_name: estoque_api
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      # ---------- Banco ----------
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      DB_NAME: estoque
+      # ---------- Servidor ----------
+      PORT: 3000
+      JWT_SECRET: super_secret_jwt_key_change_me
+      JWT_EXPIRES: 8h
+      APP_URL: http://localhost:5173
+      # ---------- SMTP (e-mail) ----------
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: dodomaik07@gmail.com
+      SMTP_PASS: apknaogywbrfupem
+      SMTP_FROM: "Sistema de Estoque <baymadev@yahoo.com>"
+    volumes:
+      - uploads_data:/app/uploads
+    networks:
+      - estoque_net
+
+  frontend:
+    build: ./frontend
+    container_name: estoque_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    environment:
+      VITE_API_URL: http://localhost:3000
+    networks:
+      - estoque_net
+
+volumes:
+  postgres_data:
+  uploads_data:
+
+networks:
+  estoque_net:
+    driver: bridge
