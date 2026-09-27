@@ -1,3 +1,7 @@
+// ============================================================
+// Utilitários para CNPJ
+// ============================================================
+
 export function limparCNPJ(valor) {
   return String(valor || '').replace(/\D/g, '').slice(0, 14);
 }
@@ -14,6 +18,7 @@ export function formatarCNPJ(valor) {
 
 export function validarCNPJ(cnpj) {
   const limpo = limparCNPJ(cnpj);
+
   if (limpo.length !== 14) return false;
   if (/^(\d)\1{13}$/.test(limpo)) return false;
 
@@ -28,12 +33,10 @@ export function validarCNPJ(cnpj) {
     return resto < 2 ? 0 : 11 - resto;
   };
 
-  const base1 = limpo.slice(0, 12);
-  const dig1 = calcDigito(base1);
+  const dig1 = calcDigito(limpo.slice(0, 12));
   if (dig1 !== parseInt(limpo[12])) return false;
 
-  const base2 = limpo.slice(0, 13);
-  const dig2 = calcDigito(base2);
+  const dig2 = calcDigito(limpo.slice(0, 13));
   if (dig2 !== parseInt(limpo[13])) return false;
 
   return true;

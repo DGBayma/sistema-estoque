@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import Modal from '../components/Modal';
 import { useAuth } from '../contexts/AuthContext';
+import { formatarCNPJ, limparCNPJ, validarCNPJ } from '../utils/cnpj';
+import { formatarTelefone, validarTelefone } from '../utils/telefone';
 
 const vazio = {
   nome: '', cnpj: '', email: '', telefone: '',
@@ -21,24 +23,86 @@ export default function Fornecedores() {
   }
   useEffect(() => { carregar(); }, []);
 
-  function abrirNovo() { setForm(vazio); setEditando('novo'); setErro(''); }
-  function abrirEditar(f) { setForm(f); setEditando(f.id); setErro(''); }
+  function abrirNovo() {
+    setForm(vazio);
+    setEditando('novo');
+    setErro('');
+  }
+
+  function abrirEditar(f) {
+    setForm({
+      ...f,
+      cnpj: f.cnpj ? formatarCNPJ(f.cnpj) : '',
+      telefone: f.telefone ? formatarTelefone(f.telefone) : '',
+    });
+    setEditando(f.id);
+    setErro('');
+  }
+
   function fechar() { setEditando(null); }
 
   async function salvar(e) {
     e.preventDefault();
     setErro('');
+
+    // Validações
+    if (form.cnpj && !validarCNPJ(form.cnpj)) {
+      setErro('CNPJ inválido. Verifique os dígitos.');
+      return;
+    }
+    if (form.telefone && !validarTelefone(form.telefone)) {
+      setErro('Telefone inválido. Use (00) 00000-0000.');
+      return;
+    }
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setErro('E-mail inválido.');
+      return;
+    }
+
+    // Envia CNPJ e telefone SEM máscara para o backend
+    const payload = {
+      ...form,
+      cnpj: form.cnpj ? limparCNPJ(form.cnpj) : null,
+      telefone: form.telefone ? form.telefone.replace(/\D/g, '') : null,
+    };
+
     try {
-      if (editando === 'novo') await api.post('/api/fornecedores', form);
-      else await api.put(`/api/fornecedores/${editando}`, form);
-      fechar(); carregar();
-    } catch (err) { setErro(err.response?.data?.erro || 'Erro ao salvar'); }
+      if (editando === 'novo') {
+        await api.post('/api/fornecedores', payload);
+      } else {
+        await api.put(`/api/fornecedores/${editando}`, payload);
+      }
+      fechar();
+      carregar();
+    } catch (err) {
+      const msg = err.response?.data?.erro || 'Erro ao salvar';
+      if (msg.includes('fornecedores_cnpj_key')) {
+        setErro('Já existe um fornecedor com este CNPJ.');
+      } else if (msg.includes('fornecedores_email_key')) {
+        setErro('Já existe um fornecedor com este e-mail.');
+      } else {
+        setErro(msg);
+      }
+    }
   }
 
   async function excluir(id) {
     if (!confirm('Excluir fornecedor?')) return;
-    try { await api.delete(`/api/fornecedores/${id}`); carregar(); }
-    catch (err) { alert(err.response?.data?.erro || 'Erro ao excluir'); }
+    try {
+      await api.delete(`/api/fornecedores/${id}`);
+      carregar();
+    } catch (err) {
+      alert(err.response?.data?.erro || 'Erro ao excluir');
+    }
+  }
+
+  // Handlers específicos
+  function handleCNPJChange(e) {
+    setForm({ ...form, cnpj: formatarCNPJ(e.target.value) });
+  }
+
+  function handleTelefoneChange(e) {
+    setForm({ ...form, telefone: formatarTelefone(e.target.value) });
   }
 
   return (
@@ -66,9 +130,9 @@ export default function Fornecedores() {
             {lista.map((f) => (
               <tr key={f.id}>
                 <td>{f.nome}</td>
-                <td>{f.cnpj || '-'}</td>
+                <td>{f.cnpj ? formatarCNPJ(f.cnpj) : '-'}</td>
                 <td>{f.email || '-'}</td>
-                <td>{f.telefone || '-'}</td>
+                <td>{f.telefone ? formatarTelefone(f.telefone) : '-'}</td>
                 <td>
                   {f.ativo
                     ? <span className="badge badge-success">Ativo</span>
@@ -115,56 +179,97 @@ export default function Fornecedores() {
           <form onSubmit={salvar}>
             <div className="form-group">
               <label>Nome *</label>
-              <input value={form.nome}
+              <input
+                value={form.nome}
                 onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                required />
+                required
+              />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div className="form-group">
                 <label>CNPJ</label>
-                <input value={form.cnpj || ''}
+                <input
+                  value={form.cnpj}
+                  onChange={handleCNPJChange}
                   placeholder="00.000.000/0000-00"
-                  onChange={(e) => setForm({ ...form, cnpj: e.target.value })} />
+                  maxLength={18}
+                  inputMode="numeric"
+                  style={{
+                    borderColor: form.cnpj && !validarCNPJ(form.cnpj) ? '#dc3545' : undefined,
+                  }}
+                />
+                {form.cnpj && !validarCNPJ(form.cnpj) && (
+                  <small style={{ color: '#dc3545', fontSize: 12 }}>CNPJ inválido</small>
+                )}
+                {form.cnpj && validarCNPJ(form.cnpj) && (
+                  <small style={{ color: '#16a34a', fontSize: 12 }}>✓ CNPJ válido</small>
+                )}
               </div>
+
               <div className="form-group">
                 <label>Telefone</label>
-                <input value={form.telefone || ''}
-                  placeholder="(11) 99999-9999"
-                  onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
+                <input
+                  value={form.telefone}
+                  onChange={handleTelefoneChange}
+                  placeholder="(00) 00000-0000"
+                  maxLength={15}
+                  inputMode="numeric"
+                  style={{
+                    borderColor: form.telefone && !validarTelefone(form.telefone) ? '#dc3545' : undefined,
+                  }}
+                />
+                {form.telefone && !validarTelefone(form.telefone) && (
+                  <small style={{ color: '#dc3545', fontSize: 12 }}>Telefone inválido</small>
+                )}
               </div>
             </div>
 
             <div className="form-group">
               <label>Email</label>
-              <input type="email" value={form.email || ''}
-                onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
             </div>
 
             <div className="form-group">
               <label>Endereço</label>
-              <input value={form.endereco || ''}
-                onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
+              <input
+                value={form.endereco}
+                onChange={(e) => setForm({ ...form, endereco: e.target.value })}
+              />
             </div>
 
             <div className="form-group">
               <label>Observações</label>
-              <textarea rows="2" value={form.observacoes || ''}
-                onChange={(e) => setForm({ ...form, observacoes: e.target.value })} />
+              <textarea
+                rows="2"
+                value={form.observacoes}
+                onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
+              />
             </div>
 
             <div className="form-group">
-              <label>
-                <input type="checkbox"
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  type="checkbox"
                   checked={form.ativo}
-                  onChange={(e) => setForm({ ...form, ativo: e.target.checked })} />
-                {' '}Ativo
+                  onChange={(e) => setForm({ ...form, ativo: e.target.checked })}
+                />
+                Ativo
               </label>
             </div>
 
             <div className="modal-actions">
               <button type="button" className="btn btn-secondary" onClick={fechar}>Cancelar</button>
-              <button className="btn btn-primary">Salvar</button>
+              <button
+                className="btn btn-primary"
+                disabled={(form.cnpj && !validarCNPJ(form.cnpj)) || (form.telefone && !validarTelefone(form.telefone))}
+              >
+                Salvar
+              </button>
             </div>
           </form>
         </Modal>

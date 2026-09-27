@@ -130,3 +130,21 @@ INSERT INTO produtos (nome, descricao, sku, categoria, preco_custo, quantidade, 
 ('Monitor LG 24"', 'Full HD IPS', 'MN-LG-001', 'Informática', 600.00, 8, 2),
 ('Headset HyperX', 'Cloud Stinger', 'HS-HX-001', 'Áudio', 200.00, 15, 4)
 ON CONFLICT (sku) DO NOTHING;
+
+-- Movimentações de exemplo
+INSERT INTO movimentacoes (produto_id, funcionario_id, tipo, quantidade, observacao, criado_em) VALUES
+  (2, 1, 'saida', 8,  'Venda balcão',       NOW() - INTERVAL '1 day'),
+  (2, 2, 'saida', 5,  'Venda online',       NOW() - INTERVAL '2 days'),
+  (2, 1, 'saida', 3,  'Venda corporativa',  NOW() - INTERVAL '3 days'),
+  (1, 1, 'saida', 2,  'Venda balcão',       NOW() - INTERVAL '5 days'),
+  (1, 2, 'saida', 1,  'Venda online',       NOW() - INTERVAL '7 days'),
+  (3, 2, 'saida', 6,  'Venda balcão',       NOW() - INTERVAL '1 day'),
+  (3, 1, 'saida', 4,  'Venda online',       NOW() - INTERVAL '4 days'),
+  (5, 2, 'saida', 3,  'Venda corporativa',  NOW() - INTERVAL '2 days'),
+  (5, 1, 'saida', 2,  'Venda balcão',       NOW() - INTERVAL '6 days'),
+  (4, 2, 'saida', 1,  'Venda online',       NOW() - INTERVAL '8 days'),
+  (2, 1, 'entrada', 20, 'Reposição fornecedor', NOW() - INTERVAL '10 days'),
+  (3, 2, 'entrada', 15, 'Compra mensal',        NOW() - INTERVAL '12 days'),
+  (1, 1, 'entrada', 5,  'Reposição urgente',    NOW() - INTERVAL '9 days'),
+  (5, 2, 'entrada', 10, 'Compra trimestral',    NOW() - INTERVAL '11 days'),
+  (4, 1, 'entrada', 4,  'Reposição',            NOW() - INTERVAL '13 days');

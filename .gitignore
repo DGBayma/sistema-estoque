@@ -1,66 +1,119 @@
-# ==================== DEPENDÊNCIAS ====================
+# ============================================================
+# DEPENDÊNCIAS
+# ============================================================
 node_modules/
 */node_modules/
 **/node_modules/
 
-# ==================== AMBIENTE ====================
+# ============================================================
+# VARIÁVEIS DE AMBIENTE (nunca versionar!)
+# ============================================================
 .env
 .env.local
-*.env
+.env.*.local
 api/.env
 !api/.env.example
+!**/.env.example
 
-# ==================== UPLOADS E DADOS ====================
+# ============================================================
+# BACKUPS DE BANCO (nunca versionar!)
+# ============================================================
+*.dump
+*.dump.gz
+*.sql.gz
+*.sql.bak
+backup_*.sql
+backup-*.sql
+backups/
+!api/db/init.sql
+
+# ============================================================
+# UPLOADS (imagens enviadas pelo usuário)
+# ============================================================
 api/uploads/*
 !api/uploads/.gitkeep
 
-# ==================== BACKUPS ====================
-*.sql
-!api/db/init.sql
-!api/db/*.sql
-backup_*.sql
-backup_*.sql.gz
-
-# ==================== LOGS ====================
+# ============================================================
+# LOGS
+# ============================================================
 *.log
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-logs/
+pnpm-debug.log*
 
-# ==================== BUILD E CACHE ====================
+# ============================================================
+# BUILD E CACHE (frontend)
+# ============================================================
 dist/
 build/
 .vite/
 .cache/
+.turbo/
+.next/
+out/
 coverage/
 
-# ==================== IDE E SO ====================
-.vscode/
-.idea/
-*.swp
-*.swo
-.DS_Store
-Thumbs.db
-
-# ==================== DOCKER ====================
-*.pid
-docker-compose.override.yml
-
-# ==================== TEMPORÁRIOS ====================
+# ============================================================
+# ARQUIVOS TEMPORÁRIOS
+# ============================================================
 tmp/
 temp/
 *.tmp
+*.temp
+*.bak
+*.swp
+*.swo
 
-# ==================== ARQUIVOS DE TESTE ====================
+# ============================================================
+# ARQUIVOS DE TESTE LOCAIS
+# ============================================================
 login.json
 prod.json
-*.json
-!package.json
-!package-lock.json
-!tsconfig.json
+test.json
+*.local.json
 
-# ==================== ANOTAÇÕES PESSOAIS ====================
+# ============================================================
+# ANOTAÇÕES PESSOAIS
+# ============================================================
 Cheat_Sheet.txt
 Notas.txt
 anotacoes.txt
+TODO.txt
+notas*.md
+rascunho*.md
+
+# ============================================================
+# SISTEMAS OPERACIONAIS
+# ============================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ============================================================
+# IDEs E EDITORES
+# ============================================================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# ============================================================
+# DOCKER
+# ============================================================
+*.pid
+docker-compose.override.yml
+
+# ============================================================
+# SCRIPTS DE BACKUP (opcional - descomente se quiser versionar)
+# ============================================================
+# backup.ps1
+# restore.ps1
